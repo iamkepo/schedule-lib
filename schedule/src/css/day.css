@@ -24,7 +24,9 @@
   position: absolute;
   z-index: 10;
   width: 98%;
-  color: #fff;
+  background-color: var(--bs-primary);
+  opacity: 0.8;
+  border: 1px solid #fff;
   padding: 5px;
   border-radius: 3px;
   overflow: hidden;

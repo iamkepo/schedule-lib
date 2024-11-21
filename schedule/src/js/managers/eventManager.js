@@ -190,16 +190,14 @@ export class EventManager {
     return eventsForWeek;
   }
 
-  getRefEvents(refs) {
-    let refEvents = [];
+  getAllEvents() {
+    let events = [];
     for (const date in this.events) {
       this.events[date].forEach(event => {
-        if (refs.some(ref => this.getFilteredEvents(ref, event))) {
-          refEvents.push(event);
-        }
+        events.push(event);
       });
     }
-    return refEvents;
+    return events;
   }
 
   formatDate(date) {

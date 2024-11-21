@@ -2,16 +2,11 @@ import { ViewManager } from "../views/index.js";
 import { EventManager } from "./eventManager.js";
 import { LangManager } from "./langManager.js";
 
-import { ModalView } from "../views/modalView.js";
-import { YearView } from "../views/yearView.js";
-import { MonthView } from "../views/monthView.js";
 import { WeekView } from "../views/weekView.js";
 import { DayView } from "../views/dayView.js";;
-import { EventView } from "../views/eventView.js";
-import { CheckboxView } from "../views/checkboxView.js";
 
 export class Schedule {
-  constructor({containerId = 'schedule', defaultView = 'month', defaultLang = 'en', editable = false, checkboxes = {list: [], name: ''}, events = []}) {
+  constructor({containerId = 'schedule', defaultView = 'week', defaultLang = 'en', editable = false, checkboxes = {list: [], name: ''}, events = []}) {
     if (!document.getElementById(containerId)) {
       let container = document.createElement('div');
       container.id = containerId;
@@ -24,11 +19,10 @@ export class Schedule {
     this.defaultRefs = [];
     
 
-    this.langManager = new LangManager();
+    this.langManager = new LangManager(defaultLang);
     this.eventManager = new EventManager();
 
-    this.viewManager = new ViewManager({containerId, defaultView, defaultLang}, this); 
-    this.modalView = new ModalView(containerId, this);
+    this.viewManager = new ViewManager({containerId, defaultView}, this); 
 
 
 
@@ -37,23 +31,15 @@ export class Schedule {
     }
 
     this.initViews();
-    this.checkboxView = new CheckboxView(checkboxes, this);
 
-    if (checkboxes.list.length > 0 ) {
-      this.checkboxView.init();
-    } else {
-      this.updateView()
-    }
+    this.updateView()
   }
 
   initViews() {
     this.updateCurrentDateInfo();
 
-    this.yearView = new YearView(this);
-    this.monthView = new MonthView(this);
     this.weekView = new WeekView(this);
     this.dayView = new DayView(this);
-    this.eventView = new EventView(this);
     
     this.initEventListeners();
   }
@@ -70,14 +56,6 @@ export class Schedule {
     this.updateCurrentDateInfo();
     
     switch (this.viewManager.currentView) {
-      case 'year':
-        this.yearView.render();
-        viewTitleElement.textContent = `${this.currentYear}`;
-        break;
-      case 'month':
-        this.monthView.render();
-        viewTitleElement.textContent = `${this.currentMonthName}`;
-        break;
       case 'week':
         this.weekView.render();
         viewTitleElement.textContent = `${this.currentWeekRange}`;
@@ -87,69 +65,31 @@ export class Schedule {
         viewTitleElement.textContent = `${this.currentDay}`;
         break;
     }
-    if (document.getElementById('event-view').style.display == "block") {
-      this.eventsView()
-    } else {
-      this.updateViewEvents()
-    }
-  }
 
-  eventsView () {
-    switch (this.viewManager.currentView) {
-      case 'year':
-        this.eventView.renderEvents(this.yearView.createEventMap());
-        break;
-      case 'month':
-        this.eventView.renderEvents(this.monthView.createEventMap());
-        break;
-      case 'week':
-        this.eventView.renderEvents(this.weekView.createEventMap());
-        break;
-      case 'day':
-        this.eventView.renderEvents(this.dayView.createEventMap());
-        break;
-    }
     this.updateViewEvents()
   }
+
     
   updateViewEvents() {    
     const eventElements = document.querySelectorAll(`.event-item`);
 
-    if (this.defaultRefs.length > 0) {
-      const refEvents = this.eventManager.getRefEvents(this.defaultRefs);
+    const refEvents = this.eventManager.getAllEvents();
 
-      eventElements.forEach(element => {
-        const date = element.getAttribute('data-date');
-        const id = element.getAttribute('data-id');
+    eventElements.forEach(element => {
+      const date = element.getAttribute('data-date');
+      const id = element.getAttribute('data-id');
 
-        if (refEvents.find(event => (date == event.date && id == event.id))) {     
-          element.style.display = 'block';
-        } else {
-          element.style.display = 'none';
-        }
-      });
-    } else {
-      eventElements.forEach(element => {
+      if (refEvents.find(event => (date == event.date && id == event.id))) {     
+        element.style.display = 'block';
+      } else {
         element.style.display = 'none';
-      });
-    }
+      }
+    });
   }
   navigate(direction) {
     const currentDate = this.currentDate;
     switch (direction) {
-      case 'prev-day':
-        this.currentDate.setDate(currentDate.getDate() - 1);
-        break;
-      case 'next-day':
-        this.currentDate.setDate(currentDate.getDate() + 1);
-        break;
       case 'prev':
-        if (this.viewManager.currentView === 'year') {
-          this.currentDate.setFullYear(currentDate.getFullYear() - 1);
-        }
-        if (this.viewManager.currentView === 'month') {
-          this.currentDate.setMonth(currentDate.getMonth() - 1);
-        }
         if (this.viewManager.currentView === 'week') {
           this.currentDate.setDate(currentDate.getDate() - 7);
         }
@@ -158,12 +98,6 @@ export class Schedule {
         }
         break;
       case 'next':
-        if (this.viewManager.currentView === 'year') {
-          this.currentDate.setFullYear(currentDate.getFullYear() + 1);
-        }
-        if (this.viewManager.currentView === 'month') {
-          this.currentDate.setMonth(currentDate.getMonth() + 1);
-        }
         if (this.viewManager.currentView === 'week') {
           this.currentDate.setDate(currentDate.getDate() + 7);
         }
@@ -171,6 +105,7 @@ export class Schedule {
           this.currentDate.setDate(currentDate.getDate() + 1);
         }
         break;
+
       case 'today':
         this.currentDate = new Date();
         break;
@@ -180,53 +115,26 @@ export class Schedule {
   }
 
   initEventListeners() {
-    document.getElementById('btn-events').addEventListener('click', () => {
-      if (this.eventView.eventView.style.display == "none") {
-        this.eventsView()
-      } else {
-        this.eventView.eventView.style.display = 'none'
-      }
-    });
     document.getElementById('btn-prev').addEventListener('click', () => this.navigate('prev'));
     document.getElementById('btn-next').addEventListener('click', () => this.navigate('next'));
-    document.getElementById('btn-prev-day').addEventListener('click', () => this.navigate('prev-day'));
-    document.getElementById('btn-next-day').addEventListener('click', () => this.navigate('next-day'));
     document.getElementById('btn-today').addEventListener('click', () => this.navigate('today'));
-    
+ 
     document.addEventListener('click', (event) => {
-      clearTimeout(this.clickTimeout);
-      this.clickTimeout = setTimeout(() => {
-        const date = event.target.dataset.date;
-        const id = event.target.dataset.id;
-        if (
-            event.target.classList.contains('calendar-date') || 
-            event.target.classList.contains('event-date-header')
-          ) {
-          this.handleSingleClick(new Date(date));
-        }
-        if (event.target.classList.contains('event-item')) {
-          this.eventView.detailEvent(date, id);
-        }
-      }, 300);     
-    })
-
-    document.addEventListener('dblclick', (event) => {
-      clearTimeout(this.clickTimeout);  
       if (this.editable) {    
         const hour = event.target.dataset.hour ? ('T'+((event.target.dataset.hour.length == 1) ? ('0'+event.target.dataset.hour) : event.target.dataset.hour)+':00') : '';
         const date = event.target.dataset.date+hour;
         const id = event.target.dataset.id;
         if (event.target.classList.contains('calendar-date')) {
-          this.modalView.open(date, this.defaultRefs);
+          this.trigger('openModal', { date });
         }
         if (event.target.classList.contains('event-item')) {
           const event = this.eventManager.getEvent(date.split('T')[0], id);
-          this.modalView.edit(event, this.defaultRefs);
+          this.trigger('editModal', { event });
         }
       } else {
-        this.modalView.showEditableModal();
+        this.trigger('showEditableModal');
       }
-    });
+    })
 
     if (this.editable) {
       document.addEventListener('dragstart', (e) => {
@@ -311,23 +219,6 @@ export class Schedule {
     return `${startOfWeekFormatted} - ${endOfWeekFormatted}`;
   }
 
-  getlistDateBetweenTwoDate(startDate, filterDay, endDate) {
-    const dates = [];
-    const dayOfWeek = this.langManager.getWeekDays();
-  
-    let currentDate = new Date(startDate);
-    const end = new Date(endDate);
-  
-    while (currentDate <= end) {
-      const currentDay = dayOfWeek[currentDate.getDay()];
-      if (filterDay.includes(currentDay)) {
-        dates.push({date: currentDate.toISOString().split('T')[0]});
-      }
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-  
-    return dates;
-  }
 
   splitIntoWeeks(month, year) {
     const daysInMonth = this.getDaysInMonth(month, year);
@@ -352,7 +243,7 @@ export class Schedule {
 
   getStartOfWeek(date) {
     const startOfWeek = new Date(date);
-    startOfWeek.setDate(date.getDate() - date.getDay());
+    startOfWeek.setDate(startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7));
     return startOfWeek;
   }
 

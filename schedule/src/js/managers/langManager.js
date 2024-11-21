@@ -1,5 +1,5 @@
 export class LangManager {
-  constructor() {
+  constructor(lang) {
     this.translations = {
       en: {
         YEAR: "Year",
@@ -8,8 +8,8 @@ export class LangManager {
         DAY: "Day",
         EVENTS: "Events",
         TODAY: "Today",
-        ADD_EVENT: 'Add Event',
-        UPDATE_EVENT: 'Update Event',
+        ADD_EVENT: 'Add availability slot',
+        UPDATE_EVENT: 'Update availability slot',
         EVENT_COLOR: 'Color:',
         EVENT_REF: "Ref",
         EVENT_TITLE: 'Title:',
@@ -46,8 +46,8 @@ export class LangManager {
         DAY: "Jour",
         EVENTS: "Événements",
         TODAY: "Aujourd'hui",
-        ADD_EVENT: 'Ajouter un événement',
-        UPDATE_EVENT: 'Mettre à jour l\'événement',
+        ADD_EVENT: 'Ajouter un créneau de disponibilité',
+        UPDATE_EVENT: 'Mettre à jour un créneau de disponibilité',
         EVENT_COLOR: 'Couleur:',
         EVENT_REF: "Référent",
         EVENT_TITLE: 'Titre:',
@@ -78,6 +78,7 @@ export class LangManager {
         NO_ITEM: "Aucun élement disponible",
       }
     };
+    this.lang = lang;
   }
 
   setLang(lang) {

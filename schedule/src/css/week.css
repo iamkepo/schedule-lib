@@ -1,7 +1,6 @@
 #week-view .week-header {
   display: grid;
   grid-template-columns: 50px repeat(7, 1fr);
-  background-color: #f8f9fabb;
   color: #000;
   text-align: center;
   padding: 10px 0;
@@ -40,7 +39,7 @@
 }
 
 #week-view .calendar-date.current-date {
-  border: 1px solid #ff0;
+  border: 1px solid var(--bs-primary);
 }
 
 #week-view .calendar-date.selected-date {
@@ -48,7 +47,9 @@
 }
 
 #week-view .event-item {
-  color: #fff;
+  background-color: var(--bs-primary);
+  opacity: 0.8;
+  border: 1px solid #fff;
   padding: 5px;
   border-radius: 3px;
   text-overflow: ellipsis;

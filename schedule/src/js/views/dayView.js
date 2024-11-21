@@ -57,9 +57,9 @@ export class DayView {
             eventElement.style.resize = 'vertical';
             eventElement.setAttribute('draggable', 'true')
           }
-          eventElement.style.backgroundColor = event.color;
-          eventElement.textContent = `${event.title}`;
-          eventElement.title = `${event.title}: ${event.description}`;
+        //   eventElement.style.backgroundColor = event.color;
+        //   eventElement.textContent = `${event.title}`;
+        //   eventElement.title = `${event.title}: ${event.description}`;
           eventElement.dataset.date = dateStr;
           eventElement.dataset.id = event.id;
 
@@ -88,22 +88,48 @@ export class DayView {
   }
 
   addResizeEventListener(eventElement, startDateTime, dateStr, event) {
-      eventElement.addEventListener('mouseup', (e) => {
-          const newHeight = eventElement.offsetHeight;
+    let isResizing = false;
 
-          // Calculate new duration based on new height
-          const durationInMinutes = (newHeight / eventElement.parentElement.offsetHeight) * 60;
-          const newEndDateTime = new Date(startDateTime.getTime() + durationInMinutes * 60000);
+    eventElement.addEventListener('mousedown', () => {
+        isResizing = true;
+    });
 
-          eventElement.dataset.end_hour = `${newEndDateTime.getHours().toString().padStart(2, '0')}:${newEndDateTime.getMinutes().toString().padStart(2, '0')}`;
-          
-          // Update the event in the event manager
-          this.calendar.trigger('update', {
-              ...event,
-              date: dateStr,
-              end_hour: eventElement.dataset.end_hour
-          });
-      });
+    eventElement.addEventListener('mousemove', (e) => {
+        if (isResizing) {
+            const newHeight = eventElement.offsetHeight;
+            const parentHeight = eventElement.parentElement.offsetHeight;
+
+            // Calculate new duration based on new height
+            const durationInMinutes = (newHeight / parentHeight) * 60;
+            const newEndDateTime = new Date(startDateTime.getTime() + durationInMinutes * 60000);
+
+            eventElement.dataset.end_hour = `${newEndDateTime.getHours().toString().padStart(2, '0')}:${newEndDateTime.getMinutes().toString().padStart(2, '0')}`;
+
+            // Optional: visually update end time live (e.g., show it in a tooltip)
+        }
+    });
+
+    eventElement.addEventListener('mouseup', () => {
+        if (isResizing) {
+            isResizing = false;
+
+            const newHeight = eventElement.offsetHeight;
+            const parentHeight = eventElement.parentElement.offsetHeight;
+
+            // Calculate new duration based on the new height
+            const durationInMinutes = (newHeight / parentHeight) * 60;
+            const newEndDateTime = new Date(startDateTime.getTime() + durationInMinutes * 60000);
+
+            eventElement.dataset.end_hour = `${newEndDateTime.getHours().toString().padStart(2, '0')}:${newEndDateTime.getMinutes().toString().padStart(2, '0')}`;
+
+            // Update the event in the event manager
+            this.calendar.trigger('update', {
+                ...event,
+                date: dateStr,
+                end_hour: eventElement.dataset.end_hour
+            });
+        }
+    });
   }
 
   createEventMap() {
